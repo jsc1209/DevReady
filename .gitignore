@@ -1,18 +1,9 @@
-# secrets / env
-.env
-.env.development
-.env.production
-.env.local
-# node / build
-node_modules/
-dist/
-dist-ssr/
-.vite/
-*.local
-# ide / os / logs
-.idea/
-.vscode/
+# 루트용 — 하위 패키지(node_modules·.env 등)는 각 패키지의 .gitignore가 담당
+# (frontend/.gitignore 와 중복되지 않게 OS·로그 정도만 무시)
+
+# OS / editor
 .DS_Store
 Thumbs.db
+
+# logs
 *.log
-npm-debug.log*

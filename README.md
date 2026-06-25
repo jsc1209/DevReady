@@ -1,16 +1,28 @@
-# React + Vite
+# DevReady (모노레포)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+개인 풀스택 데모/포트폴리오. 프론트엔드 + 백엔드(예정) + AI 연동 + DB를 한 레포로 통합한다.
 
-Currently, two official plugins are available:
+## 구조
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+.
+├── frontend/   # React + Vite + MUI 프론트엔드 (이력서 분석 등 데모 기능)
+├── backend/    # Spring Boot 백엔드 (다음 단계에 추가 예정)
+├── ai/         # AI 서버는 Colab/RunPod에서 별도 실행 — 연동은 frontend/.env 의 VITE_API_BASE_URL
+├── db/         # MySQL 스키마(devready_schema.sql) — 컨테이너 최초 기동 시 자동 로드
+└── docker-compose.yml
+```
 
-## React Compiler
+## DB 띄우기 (MySQL 8)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+docker compose up -d   # devready-mysql 컨테이너 기동 (포트 3306, DB·계정 모두 devready / 스키마 자동 로드)
+```
 
-## Expanding the Oxlint configuration
+## 프론트 실행
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+cd frontend
+npm install
+npm run dev            # http://localhost:5173
+```
