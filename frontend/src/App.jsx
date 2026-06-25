@@ -12,6 +12,8 @@ import JobDetailPage from "./pages/JobDetailPage";
 import EducationPage from "./pages/EducationPage";
 import CodingTestPage from "./pages/CodingTestPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
+import CommunityPage from "./pages/CommunityPage";
+import CalendarPage from "./pages/CalendarPage";
 import Layout from "./components/layout/Layout";
 
 const Home = () => (
@@ -42,6 +44,8 @@ const App = () => (
       <Route path="/education" element={<EducationPage />} />
       <Route path="/education/coding-test" element={<CodingTestPage />} />
       <Route path="/education/course/:id" element={<CourseDetailPage />} />
+      <Route path="/community" element={<CommunityPage />} />
+      <Route path="/calendar" element={<CalendarPage />} />
     </Route>
   </Routes>
 )
