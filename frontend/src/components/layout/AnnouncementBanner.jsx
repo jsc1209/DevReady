@@ -50,7 +50,7 @@ export default function AnnouncementBanner() {
         신규 가입 시 프리미엄 면접 세션 3회 무료 제공
       </Typography>
       <Button
-        onClick={() => navigate("/auth")}
+        onClick={() => navigate("/signup")}
         endIcon={<ArrowForward sx={{ fontSize: 14 }} />}
         sx={{
           flexShrink: 0,
