@@ -7,3 +7,6 @@ Thumbs.db
 
 # logs
 *.log
+
+# secrets (compose env at root) — never commit
+.env
