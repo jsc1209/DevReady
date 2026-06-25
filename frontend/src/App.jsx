@@ -9,6 +9,9 @@ import HistoryPage from "./pages/HistoryPage";
 import InterviewLanding from "./pages/InterviewLanding";
 import JobsPage from "./pages/JobsPage";
 import JobDetailPage from "./pages/JobDetailPage";
+import EducationPage from "./pages/EducationPage";
+import CodingTestPage from "./pages/CodingTestPage";
+import CourseDetailPage from "./pages/CourseDetailPage";
 import Layout from "./components/layout/Layout";
 
 const Home = () => (
@@ -36,6 +39,9 @@ const App = () => (
       <Route path="/interview" element={<InterviewLanding />} />
       <Route path="/jobs" element={<JobsPage />} />
       <Route path="/jobs/:id" element={<JobDetailPage />} />
+      <Route path="/education" element={<EducationPage />} />
+      <Route path="/education/coding-test" element={<CodingTestPage />} />
+      <Route path="/education/course/:id" element={<CourseDetailPage />} />
     </Route>
   </Routes>
 )
