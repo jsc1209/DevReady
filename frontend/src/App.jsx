@@ -14,6 +14,11 @@ import CodingTestPage from "./pages/CodingTestPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CommunityPage from "./pages/CommunityPage";
 import CalendarPage from "./pages/CalendarPage";
+import InterviewSetup from "./pages/InterviewSetup";
+import InterviewPayment from "./pages/InterviewPayment";
+import InterviewReport from "./pages/InterviewReport";
+import InterviewSession from "./pages/InterviewSession";
+import SessionDetail from "./pages/SessionDetail";
 import Layout from "./components/layout/Layout";
 
 const Home = () => (
@@ -38,7 +43,11 @@ const App = () => (
       <Route path="/login" element={<LoginPage />} />
       <Route path="/me" element={<MyPage />} />
       <Route path="/history" element={<HistoryPage />} />
+      <Route path="/history/:id" element={<SessionDetail />} />
       <Route path="/interview" element={<InterviewLanding />} />
+      <Route path="/interview/setup" element={<InterviewSetup />} />
+      <Route path="/interview/payment" element={<InterviewPayment />} />
+      <Route path="/interview/report/:id" element={<InterviewReport />} />
       <Route path="/jobs" element={<JobsPage />} />
       <Route path="/jobs/:id" element={<JobDetailPage />} />
       <Route path="/education" element={<EducationPage />} />
@@ -47,6 +56,8 @@ const App = () => (
       <Route path="/community" element={<CommunityPage />} />
       <Route path="/calendar" element={<CalendarPage />} />
     </Route>
+    {/* 면접 진행은 헤더/띠 없는 풀스크린 몰입형 (원본 Root: /interview/session 는 Layout 제외) */}
+    <Route path="/interview/session" element={<InterviewSession />} />
   </Routes>
 )
 
