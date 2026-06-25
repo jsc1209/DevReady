@@ -5,6 +5,7 @@ import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import MyPage from "./pages/MyPage";
 import LandingPage from "./pages/LandingPage";
+import Layout from "./components/layout/Layout";
 
 const Home = () => (
   <Box sx={{ p: 4 }}>
@@ -20,12 +21,14 @@ const Home = () => (
 
 const App = () => (
   <Routes>
-    <Route path="/" element={<LandingPage />} />
-    <Route path="/demo" element={<Home />} />
-    <Route path="/resume" element={<ResumeAnalyzePage />} />
-    <Route path="/signup" element={<SignupPage />} />
-    <Route path="/login" element={<LoginPage />} />
-    <Route path="/me" element={<MyPage />} />
+    <Route element={<Layout />}>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/demo" element={<Home />} />
+      <Route path="/resume" element={<ResumeAnalyzePage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/me" element={<MyPage />} />
+    </Route>
   </Routes>
 )
 
