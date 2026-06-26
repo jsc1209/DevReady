@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -9,10 +9,11 @@ import {
   Chip,
   Paper,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import { Search, Tune, Close } from "@mui/icons-material";
 import { AIRecommendCard } from "../components/common/AIRecommendCard";
-import { JOBS_DATA } from "../data/jobsMock";
+import { getJobs } from "../api/jobsApi";
 import JobCard from "../components/jobs/JobCard";
 
 const COMPANIES = ["전체", "카카오", "네이버", "토스", "라인", "쿠팡", "우아한형제들"];
@@ -66,7 +67,31 @@ export default function JobsPage() {
     company: "전체",
   });
 
-  const filtered = JOBS_DATA.filter((j) => {
+  // 실 DB 공고 조회 (mock → /api/jobs)
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    getJobs()
+      .then((data) => {
+        if (alive) {
+          setJobs(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const filtered = jobs.filter((j) => {
     const matchSearch =
       j.title.includes(search) ||
       j.company.includes(search) ||
@@ -237,7 +262,15 @@ export default function JobsPage() {
       )}
 
       {/* 공고 목록 */}
-      {filtered.length > 0 ? (
+      {loading ? (
+        <Box sx={{ py: 10, display: "flex", justifyContent: "center" }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Box sx={{ py: 10, textAlign: "center", color: "error.main" }}>
+          공고를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+        </Box>
+      ) : filtered.length > 0 ? (
         <Box
           sx={{
             display: "grid",

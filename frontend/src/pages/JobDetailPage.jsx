@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -7,6 +7,7 @@ import {
   Button,
   IconButton,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -24,7 +25,7 @@ import {
   Star,
   ChevronRight,
 } from "@mui/icons-material";
-import { JOBS_DATA } from "../data/jobsMock";
+import { getJob } from "../api/jobsApi";
 import { ApplicationForm } from "../components/common/ApplicationForm";
 
 // 원본 ../auth 의 실행 가드(프로토타입 localStorage 플래그)를 그대로 복제.
@@ -90,7 +91,31 @@ export default function JobDetailPage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [activeTab, setActiveTab] = useState("desc");
 
-  const job = JOBS_DATA.find((j) => j.id === id) ?? JOBS_DATA[0];
+  // 실 DB 공고 상세 (mock → /api/jobs/:id)
+  const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setError(false);
+    getJob(id)
+      .then((data) => {
+        if (alive) {
+          setJob(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, [id]);
 
   // 비로그인 → /auth, 이력서 미완 → /resume, 둘 다 충족 → action 실행 (경로 원본 유지)
   const guard = (action) => {
@@ -109,6 +134,24 @@ export default function JobDetailPage() {
     setApplied(true);
     setShowApplicationForm(false);
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ maxWidth: 896, mx: "auto", px: 2, py: 10, display: "flex", justifyContent: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  if (error || !job) {
+    return (
+      <Box sx={{ maxWidth: 896, mx: "auto", px: 2, py: 10, textAlign: "center" }}>
+        <Typography sx={{ color: "text.secondary", mb: 2 }}>공고를 불러오지 못했습니다.</Typography>
+        <Button onClick={() => navigate("/jobs")} startIcon={<ArrowBack sx={{ fontSize: 16 }} />}>
+          공고 목록으로
+        </Button>
+      </Box>
+    );
+  }
 
   const dDayNum = Math.max(
     0,

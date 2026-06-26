@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devready.backend_user.jobposting.mapper.JobPostingMapper">
+
+  <sql id="cols">
+    job_posting_id, company_name, job_category, requirements, preferred_qualifications,
+    deadline, posting_url, status, created_at
+  </sql>
+
+  <!-- 목록: 미삭제 공고를 마감일 임박순으로. -->
+  <select id="findAll" resultType="com.devready.backend_user.jobposting.vo.JobPostingVO">
+    SELECT <include refid="cols"/>
+    FROM job_posting
+    WHERE is_deleted = 0
+    ORDER BY deadline ASC, job_posting_id ASC
+  </select>
+
+  <!-- 단건 상세. -->
+  <select id="findById" resultType="com.devready.backend_user.jobposting.vo.JobPostingVO">
+    SELECT <include refid="cols"/>
+    FROM job_posting
+    WHERE job_posting_id = #{id} AND is_deleted = 0
+  </select>
+
+</mapper>

@@ -985,8 +985,8 @@ VALUES
 INSERT INTO `job_posting`
   (`company_name`, `job_category`, `requirements`, `preferred_qualifications`, `deadline`, `posting_url`, `status`, `admin_id`)
 VALUES
-  ('카카오', '프론트엔드 개발자', 'React 숙련자, TypeScript 경험, 상태관리 라이브러리 사용 경험', 'Next.js SSR/SSG 경험, 성능 최적화 경험(Core Web Vitals), 디자인 시스템 구축 경험, 오픈소스 기여 경험', '2026-06-20', 'https://devready.local/jobs/1', 'OPEN', 1),
-  ('네이버', '풀스택 개발자', 'Node.js + React 3년 이상, AWS 인프라 운영 경험, 대용량 트래픽 처리 경험', '쿠버네티스/도커 운영 경험, 검색 엔진(Elasticsearch) 활용 경험, 결제 시스템 개발 경험', '2026-06-25', 'https://devready.local/jobs/2', 'OPEN', 1),
+  ('카카오', '프론트엔드 개발자', 'React 숙련자, TypeScript 경험, 상태관리 라이브러리 사용 경험', 'Next.js SSR/SSG 경험, 성능 최적화 경험(Core Web Vitals), 디자인 시스템 구축 경험, 오픈소스 기여 경험', '2026-07-15', 'https://devready.local/jobs/1', 'OPEN', 1),
+  ('네이버', '풀스택 개발자', 'Node.js + React 3년 이상, AWS 인프라 운영 경험, 대용량 트래픽 처리 경험', '쿠버네티스/도커 운영 경험, 검색 엔진(Elasticsearch) 활용 경험, 결제 시스템 개발 경험', '2026-07-18', 'https://devready.local/jobs/2', 'OPEN', 1),
   ('토스', '백엔드 개발자 (Java)', 'Java/Spring Boot 2년 이상, MySQL 최적화 경험, 고가용성 서비스 경험', '금융 도메인 서비스 경험, JPA/Querydsl 경험, Redis 캐싱 전략 경험, gRPC 사용 경험', '2026-07-01', 'https://devready.local/jobs/3', 'OPEN', 1),
   ('라인', '프론트엔드 개발자', 'Vue.js 또는 React 경험, HTML/CSS 기초 탄탄, 팀 협업 경험', '글로벌 서비스 경험, 웹 접근성(WCAG) 이해, 애니메이션/인터랙션 구현 경험', '2026-06-28', 'https://devready.local/jobs/4', 'OPEN', 1),
   ('쿠팡', '데이터 엔지니어', 'Python 데이터 처리 경험, Spark/Kafka 운영 경험, SQL 고급 쿼리 작성', 'Airflow 워크플로우 관리 경험, Flink 실시간 처리 경험, 데이터 레이크 하우스 아키텍처 이해', '2026-07-10', 'https://devready.local/jobs/5', 'OPEN', 1),
