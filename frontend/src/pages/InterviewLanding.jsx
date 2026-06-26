@@ -154,6 +154,7 @@ export default function InterviewLanding() {
             direction={{ xs: "column", sm: "row" }}
             spacing={1.5}
             justifyContent="center"
+            alignItems="center"
           >
             <Button
               onClick={() => handleSelectPlan("standard")}

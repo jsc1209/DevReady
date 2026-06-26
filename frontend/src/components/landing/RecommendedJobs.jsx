@@ -282,10 +282,10 @@ export default function RecommendedJobs({ savedJobs, toggleSave }) {
                 textAlign: "center",
                 textTransform: "none",
                 minWidth: 0,
-                color: highlight ? "primary.main" : "text.secondary",
-                bgcolor: highlight ? "primary.light" : "transparent",
+                color: highlight ? "#4F46E5" : "text.secondary",
+                bgcolor: highlight ? "#EEF2FF" : "transparent",
                 "&:hover": {
-                  bgcolor: highlight ? "primary.light" : "grey.50",
+                  bgcolor: highlight ? "#E0E7FF" : "grey.50",
                 },
               }}
             >
@@ -297,13 +297,13 @@ export default function RecommendedJobs({ savedJobs, toggleSave }) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: highlight ? "primary.light" : "grey.100",
+                  bgcolor: highlight ? "#E0E7FF" : "grey.100",
                 }}
               >
                 <Icon
                   sx={{
                     fontSize: 16,
-                    color: highlight ? "primary.main" : "text.secondary",
+                    color: highlight ? "#4F46E5" : "text.secondary",
                   }}
                 />
               </Box>
@@ -312,7 +312,7 @@ export default function RecommendedJobs({ savedJobs, toggleSave }) {
                 sx={{
                   lineHeight: 1.2,
                   fontWeight: highlight ? 500 : 400,
-                  color: highlight ? "primary.main" : "text.secondary",
+                  color: highlight ? "#4F46E5" : "text.secondary",
                 }}
               >
                 {label}

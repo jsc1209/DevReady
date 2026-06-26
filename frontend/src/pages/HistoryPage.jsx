@@ -51,10 +51,10 @@ export default function HistoryPage() {
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography sx={{ fontSize: 30, fontWeight: 700 }}>
             면접 기록
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          <Typography color="text.secondary" sx={{ fontSize: 14, mt: 0.5 }}>
             총 {ALL_SESSIONS.length}회 면접 시뮬레이션을 진행했습니다
           </Typography>
         </Box>
@@ -67,7 +67,7 @@ export default function HistoryPage() {
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, mb: 4 }}>
         {STATS.map(({ label, value }) => (
           <Paper key={label} variant="outlined" sx={{ p: 2, textAlign: "center" }}>
-            <Typography sx={{ fontFamily: "monospace", fontSize: 24, fontWeight: 700 }}>
+            <Typography sx={{ fontFamily: "'DM Mono', monospace", fontSize: 24, fontWeight: 700 }}>
               {value}
             </Typography>
             <Typography variant="caption" color="text.secondary">

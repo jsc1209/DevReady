@@ -4,11 +4,11 @@ import { ChevronRight, TrendingUp, TrendingDown } from "@mui/icons-material";
 // 표 헤더와 행이 같은 컬럼 폭을 쓰도록 공유
 export const HISTORY_GRID = "1.5fr 1fr 1fr 80px 80px 40px";
 
-// 등급별 색 (원본 text-green-400/text-primary/text-yellow-400 → MUI 토큰)
+// 등급별 색 (원본 text-green-400 #4ADE80 / text-primary / text-yellow-400 #FACC15)
 function gradeColor(grade) {
-  if (grade.startsWith("A")) return "success.main";
+  if (grade.startsWith("A")) return "#4ADE80";
   if (grade.startsWith("B")) return "primary.main";
-  return "warning.main";
+  return "#FACC15";
 }
 
 /**
@@ -37,7 +37,7 @@ export default function HistoryRow({ session, trend, onClick }) {
       }}
     >
       <Box>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 500 }}>
           {session.type}
         </Typography>
         <Typography variant="caption" color="text.secondary">
@@ -45,19 +45,19 @@ export default function HistoryRow({ session, trend, onClick }) {
         </Typography>
       </Box>
 
-      <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
+      <Typography sx={{ fontSize: 14, display: { xs: "none", sm: "block" } }}>
         {session.job}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+      <Typography color="text.secondary" sx={{ fontSize: 14, display: { xs: "none", sm: "block" } }}>
         {session.level}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+      <Typography color="text.secondary" sx={{ fontSize: 14, display: { xs: "none", sm: "block" } }}>
         {session.duration}
       </Typography>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: { xs: "auto", sm: 0 } }}>
         <Box>
-          <Box component="span" sx={{ fontFamily: "monospace", fontSize: 18, fontWeight: 700 }}>
+          <Box component="span" sx={{ fontFamily: "'DM Mono', monospace", fontSize: 18, fontWeight: 700 }}>
             {session.score}
           </Box>
           <Box component="span" sx={{ fontSize: 12, ml: 0.5, color: gradeColor(session.grade) }}>
@@ -71,7 +71,7 @@ export default function HistoryRow({ session, trend, onClick }) {
               alignItems: "center",
               gap: 0.25,
               fontSize: 12,
-              color: trend > 0 ? "success.main" : trend < 0 ? "error.main" : "text.secondary",
+              color: trend > 0 ? "#4ADE80" : trend < 0 ? "#F87171" : "text.secondary",
             }}
           >
             {trend > 0 ? (
