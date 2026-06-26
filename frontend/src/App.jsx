@@ -20,6 +20,7 @@ import InterviewPayment from "./pages/InterviewPayment";
 import InterviewReport from "./pages/InterviewReport";
 import InterviewSession from "./pages/InterviewSession";
 import SessionDetail from "./pages/SessionDetail";
+import AdminPage from "./pages/AdminPage";
 import Layout from "./components/layout/Layout";
 
 const Home = () => (
@@ -60,6 +61,8 @@ const App = () => (
     </Route>
     {/* 면접 진행은 헤더/띠 없는 풀스크린 몰입형 (원본 Root: /interview/session 는 Layout 제외) */}
     <Route path="/interview/session" element={<InterviewSession />} />
+    {/* 관리자 페이지도 자체 사이드바 풀스크린 (원본 Root: /admin 는 Layout 제외) */}
+    <Route path="/admin" element={<AdminPage />} />
   </Routes>
 )
 
