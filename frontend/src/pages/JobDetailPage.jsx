@@ -37,10 +37,10 @@ function isAuthed() {
 }
 function isResumeComplete() {
   try {
-    const v = localStorage.getItem("devready_resume_complete");
-    return v === null ? true : v === "1";
+    // 플래그가 명시적으로 "1"(필수 충족)일 때만 통과. 미작성(null)·미충족·읽기 실패는 차단.
+    return localStorage.getItem("devready_resume_complete") === "1";
   } catch {
-    return true;
+    return false;
   }
 }
 
