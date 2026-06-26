@@ -109,6 +109,27 @@ export default function InterviewSetup() {
     Object.fromEntries(CONSENT_ITEMS.map((c) => [c.id, false]))
   );
   const [resume, setResume] = useState("");
+  const [resumeText, setResumeText] = useState(""); // 맞춤 질문 생성용 이력서 본문(선택)
+  const [jobPostingText, setJobPostingText] = useState(""); // 맞춤 질문 생성용 공고 본문(선택)
+
+  // 본문 입력 textarea 공통 스타일
+  const textareaSx = {
+    width: "100%",
+    minHeight: 88,
+    px: 1.5,
+    py: 1.25,
+    borderRadius: "12px",
+    bgcolor: secondary,
+    border: "1px solid",
+    borderColor: "divider",
+    color: "text.primary",
+    fontSize: 13,
+    font: "inherit",
+    resize: "vertical",
+    boxSizing: "border-box",
+    "&:focus": { outline: "none", borderColor: "rgba(108,99,255,0.6)" },
+    "&::placeholder": { color: "text.secondary" },
+  };
 
   const requiredIds = CONSENT_ITEMS.filter((c) => c.required).map((c) => c.id);
   const consentOk = requiredIds.every((id) => consents[id]);
@@ -127,7 +148,7 @@ export default function InterviewSetup() {
       setStep(step + 1);
     } else {
       navigate("/interview/session", {
-        state: { job, level, type, companyType, interviewer, count, coverText, resume, jobContext, videoEnabled },
+        state: { job, level, type, companyType, interviewer, count, coverText, resume, resumeText, jobPostingText, jobContext, videoEnabled },
       });
     }
   };
@@ -619,6 +640,31 @@ export default function InterviewSetup() {
                     </Box>
                   ))}
                 </Box>
+              </Box>
+
+              {/* 맞춤 질문 생성 (선택) — 이력서·공고 본문을 둘 다 입력하면 AI가 맞춤 질문을 생성 */}
+              <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 2.5, mt: 2.5 }}>
+                <Typography sx={{ fontSize: 14, fontWeight: 500, color: "text.primary", mb: 0.5 }}>
+                  맞춤 질문 생성 (선택)
+                </Typography>
+                <Typography sx={{ fontSize: 12, color: "text.secondary", mb: 1.5, lineHeight: 1.6 }}>
+                  이력서 본문과 채용 공고를 둘 다 입력하면 AI가 이력서·공고 기반 맞춤 질문을 생성합니다.
+                  비워두면 기본 질문으로 진행됩니다.
+                </Typography>
+                <Box
+                  component="textarea"
+                  value={resumeText}
+                  onChange={(e) => setResumeText(e.target.value)}
+                  placeholder="이력서 본문을 붙여넣으세요 (선택)"
+                  sx={{ ...textareaSx, mb: 1 }}
+                />
+                <Box
+                  component="textarea"
+                  value={jobPostingText}
+                  onChange={(e) => setJobPostingText(e.target.value)}
+                  placeholder="채용 공고 본문을 붙여넣으세요 (선택)"
+                  sx={textareaSx}
+                />
               </Box>
             </Box>
           )}

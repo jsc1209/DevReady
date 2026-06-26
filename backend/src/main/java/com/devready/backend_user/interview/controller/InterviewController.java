@@ -41,6 +41,24 @@ public class InterviewController {
         return DataVO.fail(error != null ? error.toString() : "AI 평가에 실패했습니다.");
     }
 
+    /**
+     * 맞춤 질문 생성 — Colab /interview/generate 패스스루(evaluate 와 달리 DataVO 로 감싸지 않음).
+     * 요청 바디(resume/job_posting/n/persona/lang)를 그대로 전달, FastAPI 원본({ok,questions}/{ok:false,error}) 반환.
+     */
+    @PostMapping("/generate")
+    public Map<String, Object> generate(@RequestBody Map<String, Object> body) {
+        return interviewService.generate(body);
+    }
+
+    /**
+     * 세션 종합 리포트 — Colab /interview/report 패스스루.
+     * 요청 바디(results/lang)를 그대로 전달, FastAPI 원본({ok,...,report:{...}}/{ok:false,error}) 반환.
+     */
+    @PostMapping("/report")
+    public Map<String, Object> report(@RequestBody Map<String, Object> body) {
+        return interviewService.report(body);
+    }
+
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
     }

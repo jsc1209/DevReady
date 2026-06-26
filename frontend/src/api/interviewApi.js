@@ -30,3 +30,23 @@ export function mapScores(evaluation) {
     communication: s.communication ?? 0,
   };
 }
+
+/**
+ * POST /api/interview/generate — Spring 게이트웨이가 Colab /interview/generate 를 패스스루.
+ * 입력 {resume, job_posting, n, persona, lang}. 응답(원본): { ok:true, questions:[문자열,...] } / { ok:false, error }.
+ * (DataVO 미적용 — res.ok / res.questions 로 분기.)
+ */
+export async function generateQuestions({ resume, job_posting, n = 5, persona = "default", lang = "ko" }) {
+  const res = await gatewayAxios.post("/api/interview/generate", { resume, job_posting, n, persona, lang });
+  return res.data;
+}
+
+/**
+ * POST /api/interview/report — Spring 게이트웨이가 Colab /interview/report 를 패스스루.
+ * 입력 {results:[{question, evaluation:{scores(4축), feedback}}...], lang}.
+ * 응답(원본): { ok, overall, axis_averages, categories, grade, report:{summary, strengths[], weaknesses[], guide[]} } / { ok:false, error }.
+ */
+export async function generateReport({ results, lang = "ko" }) {
+  const res = await gatewayAxios.post("/api/interview/report", { results, lang });
+  return res.data;
+}

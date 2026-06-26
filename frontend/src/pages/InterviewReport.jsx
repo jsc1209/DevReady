@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -30,6 +30,7 @@ import {
   SURVEY_EVERY,
   starGuide,
 } from "../data/interviewReportMock";
+import { generateReport } from "../api/interviewApi";
 
 const mono = "'DM Mono', monospace";
 
@@ -164,6 +165,10 @@ export default function InterviewReport() {
   const [surveyDone, setSurveyDone] = useState(false);
   const [survey, setSurvey] = useState({ overall: 0, quality: 0, usability: 0, recommend: 0, comment: "" });
 
+  // AI 종합 리포트(/interview/report) — 실제 면접 완료 시에만 호출, 실패/524 시 클라이언트 계산으로 폴백
+  const [aiReport, setAiReport] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
   useEffect(() => {
     // 실제 면접 완료로 들어온 경우만(딥링크 재방문 중복 카운트 방지)
     if (!state?.entries || state.entries.length === 0) return;
@@ -173,6 +178,43 @@ export default function InterviewReport() {
     try { localStorage.setItem("devready_interview_count", String(count)); } catch { /* ignore */ }
     setInterviewCount(count);
     if (count % SURVEY_EVERY === 0) setShowSurveyPrompt(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 면접 종료 후 entries → results 로 변환해 AI 종합 리포트 호출(실제 면접 완료 시에만).
+  useEffect(() => {
+    if (!state?.entries || state.entries.length === 0) return; // mock/딥링크 → 호출 안 함
+    let cancelled = false;
+    // FastAPI 4축으로 변환(우리 5키 중 depth 제외, 나머지 1:1). question·feedback 동봉.
+    const results = state.entries.map((e) => ({
+      question: e.question ?? e.main ?? "",
+      evaluation: {
+        scores: {
+          technical_accuracy: e.scores?.technical ?? 0,
+          specificity: e.scores?.specificity ?? 0,
+          logic: e.scores?.logic ?? 0,
+          communication: e.scores?.communication ?? 0,
+        },
+        feedback: e.aiFeedback?.feedback ?? "",
+      },
+    }));
+    setReportLoading(true);
+    (async () => {
+      try {
+        const res = await generateReport({ results, lang: "ko" });
+        const rep = res?.ok ? res.report : null;
+        if (!cancelled && rep && (rep.summary || rep.strengths?.length || rep.weaknesses?.length || rep.guide?.length)) {
+          setAiReport(res);
+        }
+      } catch {
+        // 실패/524 → aiReport null 유지(클라이언트 계산 폴백)
+      } finally {
+        if (!cancelled) setReportLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -657,6 +699,46 @@ export default function InterviewReport() {
           </Box>
         </Box>
       </Box>
+
+      {/* AI 종합 리포트 — 실제 면접 완료 시. 로딩: 스피너 / 성공: 표시 / 실패·미가동: 미표시(아래 클라이언트 계산이 폴백) */}
+      {(reportLoading || aiReport?.report) && (
+        <Box sx={{ borderRadius: "16px", border: "1px solid", borderColor: "divider", bgcolor: "background.paper", p: 4, mb: 4 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+            <LightbulbOutlined sx={{ fontSize: 20, color: "primary.main" }} />
+            <Typography sx={{ fontWeight: 700, fontSize: 18, color: "text.primary" }}>AI 종합 리포트</Typography>
+          </Box>
+          {reportLoading ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary", py: 1 }}>
+              <CircularProgress size={18} />
+              <Typography sx={{ fontSize: 14 }}>AI가 면접 전체를 분석해 리포트를 생성하고 있습니다... (최대 1~2분)</Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {aiReport.report.summary && (
+                <Typography sx={{ fontSize: 14, color: "text.primary", lineHeight: 1.7 }}>{aiReport.report.summary}</Typography>
+              )}
+              {[
+                ["강점", aiReport.report.strengths, "#16A34A"],
+                ["보완점", aiReport.report.weaknesses, "#EA580C"],
+                ["준비 가이드", aiReport.report.guide, "#6366F1"],
+              ].map(([label, items, color]) =>
+                Array.isArray(items) && items.length > 0 ? (
+                  <Box key={label}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, color, mb: 0.5 }}>{label}</Typography>
+                    <Box component="ul" sx={{ m: 0, pl: 2.5, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                      {items.map((it, i) => (
+                        <Box component="li" key={i} sx={{ fontSize: 13, color: "text.secondary", lineHeight: 1.6 }}>
+                          {it}
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                ) : null
+              )}
+            </Box>
+          )}
+        </Box>
+      )}
 
       {/* Overview row */}
       <Box

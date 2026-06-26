@@ -18,7 +18,7 @@ import {
   MonitorHeart,
 } from "@mui/icons-material";
 import { Q_BANK, PERSONALITY_QUESTIONS } from "../data/interviewSessionMock";
-import { evaluateAnswer, mapScores } from "../api/interviewApi";
+import { evaluateAnswer, mapScores, generateQuestions } from "../api/interviewApi";
 
 // Mock followup generation based on answer
 function generateFollowup(question, answer) {
@@ -81,6 +81,8 @@ export default function InterviewSession() {
   const count = config.count || 5;
   const coverText = config.coverText || "";
   const videoEnabled = config.videoEnabled ?? false; // 영상 동의 여부 (기본: 음성 면접)
+  const resumeText = (config.resumeText || "").trim(); // 맞춤 질문 생성용 이력서 본문
+  const jobPostingText = (config.jobPostingText || "").trim(); // 맞춤 질문 생성용 공고 본문
 
   // Build question list
   const questionList = (() => {
@@ -132,6 +134,7 @@ export default function InterviewSession() {
   const [warmupLeft, setWarmupLeft] = useState(WARMUP_SECONDS);
   const [micDb, setMicDb] = useState(0);
   const [scoring, setScoring] = useState(false); // AI 채점(EXAONE ~140s) 진행 중 — 로딩 오버레이 + 중복 제출 방지
+  const [generating, setGenerating] = useState(() => !!(resumeText && jobPostingText)); // 맞춤 질문 생성 중
 
   // Video/camera refs
   const videoRef = useRef(null);
@@ -208,6 +211,45 @@ export default function InterviewSession() {
     },
     []
   );
+
+  // 맞춤 질문 생성(generate): 이력서·공고가 둘 다 있을 때만 호출. 하나라도 비면 즉시 Q_BANK 유지(빈 입력은 서버 에러).
+  useEffect(() => {
+    if (!resumeText || !jobPostingText) return; // generating 은 이미 false
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await generateQuestions({ resume: resumeText, job_posting: jobPostingText, n: TOTAL, lang: "ko" });
+        const qs = res?.ok && Array.isArray(res.questions)
+          ? res.questions.filter((q) => typeof q === "string" && q.trim())
+          : [];
+        // 정확히 TOTAL 개 확보 시에만 대체(TOTAL·followupTarget 불변 유지). 부족/실패 시 Q_BANK 폴백.
+        if (!cancelled && qs.length >= TOTAL) {
+          setEntries(
+            qs.slice(0, TOTAL).map((q, i) => ({
+              id: i + 1,
+              main: q,
+              followup: "",
+              answer: "",
+              followupAnswer: "",
+              scores: { technical: 0, logic: 0, specificity: 0, depth: 0, communication: 0 },
+              star: { S: 0, T: 0, A: 0, R: 0 },
+              wpm: 0,
+              silenceCount: 0,
+              answerTime: 0,
+            }))
+          );
+        }
+      } catch {
+        // 실패 → Q_BANK 유지(폴백)
+      } finally {
+        if (!cancelled) setGenerating(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── 준비(워밍업) 5초: 음성·표정 점수 미반영, 음성이 기준 dB 이상이면 즉시 시작 ──
   const endWarmup = useCallback(() => {
@@ -425,6 +467,32 @@ export default function InterviewSession() {
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
+      {/* 맞춤 질문 생성 로딩 — 이력서·공고 기반 generate(최대 1~2분), 화면 잠금 */}
+      {generating && (
+        <Box
+          sx={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            px: 2,
+            color: "#fff",
+            background: "rgba(15,23,42,0.96)",
+          }}
+        >
+          <CircularProgress sx={{ color: "#fff", mb: 3 }} />
+          <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}>맞춤 질문을 생성하고 있습니다</Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: 14, textAlign: "center", lineHeight: 1.625 }}>
+            이력서·공고를 분석해 AI가 면접 질문을 만들고 있어요. 최대 1~2분 소요될 수 있습니다.
+            <br />
+            창을 닫지 말고 잠시만 기다려 주세요.
+          </Typography>
+        </Box>
+      )}
+
       {/* 준비(워밍업) 오버레이 — 5초 경과 또는 음성 감지 시 종료 */}
       {warmup && (
         <Box

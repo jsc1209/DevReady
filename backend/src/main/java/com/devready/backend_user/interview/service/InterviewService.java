@@ -99,4 +99,43 @@ public class InterviewService {
             return null;
         }
     }
+
+    /**
+     * 맞춤 질문 생성 — Colab /interview/generate 패스스루.
+     * @return FastAPI 원본({ok, questions} / 실패 {ok:false, error}). 연결 불가 시 graceful {ok:false,...}.
+     */
+    public Map<String, Object> generate(Map<String, Object> body) {
+        return proxyPost("/interview/generate", body);
+    }
+
+    /**
+     * 세션 종합 리포트 — Colab /interview/report 패스스루.
+     * @return FastAPI 원본({ok, ..., report:{...}} / 실패 {ok:false, error}). 연결 불가 시 graceful {ok:false,...}.
+     */
+    public Map<String, Object> report(Map<String, Object> body) {
+        return proxyPost("/interview/report", body);
+    }
+
+    /** 비스트리밍 패스스루 프록시(generate·report 공용). evaluate(SSE+DataVO)와 달리 응답을 변형 없이 그대로 반환한다. */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> proxyPost(String uri, Map<String, Object> body) {
+        if (aiServerUrl == null || aiServerUrl.isBlank()) {
+            return Map.of("ok", false, "error", "AI 서버에 연결할 수 없습니다.");
+        }
+        try {
+            Map<String, Object> resp = aiRestClient.post()
+                    .uri(uri)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .body(Map.class);
+            if (resp == null) {
+                return Map.of("ok", false, "error", "AI 서버 응답이 비어 있습니다.");
+            }
+            return resp; // 원본 그대로 패스스루
+        } catch (Exception e) {
+            log.warn("AI 호출 실패({}): {}", uri, e.toString());
+            return Map.of("ok", false, "error", "AI 서버에 연결할 수 없습니다.");
+        }
+    }
 }
