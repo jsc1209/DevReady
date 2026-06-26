@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Button, Stack } from "@mui/material";
+import { Box, Typography, Button, Stack, CircularProgress } from "@mui/material";
 import {
   MenuBook,
   ChevronRight,
@@ -22,6 +22,7 @@ import {
   QUIZ_TOPICS,
   ALL_QUIZZES,
 } from "../data/educationMock";
+import { generateQuiz } from "../api/educationApi";
 
 // 원본 ../auth 의 실행 가드(프로토타입 localStorage 플래그)를 그대로 복제.
 // 페이지 열람은 자유, "AI 퀴즈 시작/약점카드/주제칩/코딩테스트" 같은 실행 동작만 가드한다.
@@ -72,7 +73,28 @@ export default function EducationPage() {
   const [descriptiveInput, setDescriptiveInput] = useState("");
   const [weakConcepts, setWeakConcepts] = useState(WEAK_CONCEPTS);
 
-  const QUIZ = ALL_QUIZZES;
+  const [quiz, setQuiz] = useState(ALL_QUIZZES);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const QUIZ = quiz;
+
+  // 퀴즈 시작: topic 으로 AI 퀴즈 생성(난이도 기본 中). 실패/빈결과/연결불가 시 mock(ALL_QUIZZES) 폴백.
+  const startQuiz = (topic) => {
+    guard(async () => {
+      setQuizLoading(true);
+      try {
+        const items = await generateQuiz({ topic, n: 5, difficulty: "중" });
+        setQuiz(items && items.length > 0 ? items : ALL_QUIZZES);
+      } catch {
+        setQuiz(ALL_QUIZZES);
+      } finally {
+        setQuizIdx(0);
+        setQuizAnswer(null);
+        setDescriptiveInput("");
+        setQuizLoading(false);
+        setQuizActive(true);
+      }
+    });
+  };
 
   const filtered =
     cat === "all" ? COURSES : COURSES.filter((c) => c.category === cat);
@@ -455,6 +477,30 @@ export default function EducationPage() {
   // ───────────── 메인 모드 ─────────────
   return (
     <Box sx={{ maxWidth: 1152, mx: "auto", px: 2, py: 5 }}>
+      {/* AI 퀴즈 생성 로딩 — /education/quiz (최대 1~2분), 화면 잠금 */}
+      {quizLoading && (
+        <Box
+          sx={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 70,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            px: 2,
+            color: "#fff",
+            background: "rgba(15,23,42,0.96)",
+          }}
+        >
+          <CircularProgress sx={{ color: "#fff", mb: 3 }} />
+          <Typography sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}>AI 퀴즈를 생성하고 있습니다</Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: 14, textAlign: "center", lineHeight: 1.625 }}>
+            선택한 주제로 문제를 만들고 있어요. 최대 1~2분 소요될 수 있습니다.
+          </Typography>
+        </Box>
+      )}
+
       {/* Header */}
       <Box
         sx={{
@@ -480,7 +526,7 @@ export default function EducationPage() {
           </Typography>
         </Box>
         <Button
-          onClick={() => guard(() => setQuizActive(true))}
+          onClick={() => startQuiz(QUIZ_TOPICS[0]?.label ?? "프론트엔드 기초")}
           variant="contained"
           startIcon={<AutoAwesome sx={{ fontSize: 16 }} />}
           sx={{
@@ -612,7 +658,7 @@ export default function EducationPage() {
               key={w.title}
               component="button"
               type="button"
-              onClick={() => guard(() => setQuizActive(true))}
+              onClick={() => startQuiz(w.title)}
               sx={{
                 textAlign: "left",
                 p: 1.5,
@@ -700,7 +746,7 @@ export default function EducationPage() {
               key={t.label}
               component="button"
               type="button"
-              onClick={() => guard(() => setQuizActive(true))}
+              onClick={() => startQuiz(t.label)}
               sx={{
                 px: 1.5,
                 py: 0.75,
