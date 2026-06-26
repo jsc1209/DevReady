@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devready.backend_user.resume.mapper.ResumeMapper">
+
+  <!-- ───── resume ───── -->
+  <select id="countByMember" resultType="int">
+    SELECT COUNT(*) FROM resume WHERE member_id = #{memberId}
+  </select>
+
+  <select id="findResumesByMember" resultType="com.devready.backend_user.resume.vo.ResumeVO">
+    SELECT resume_id, member_id, birth_date, address, github_url, portfolio_url,
+           is_primary, created_at, updated_at
+    FROM resume
+    WHERE member_id = #{memberId}
+    ORDER BY resume_id ASC
+  </select>
+
+  <select id="findResumeById" resultType="com.devready.backend_user.resume.vo.ResumeVO">
+    SELECT resume_id, member_id, is_primary
+    FROM resume
+    WHERE resume_id = #{id}
+  </select>
+
+  <insert id="insertResume" parameterType="com.devready.backend_user.resume.vo.ResumeVO"
+          useGeneratedKeys="true" keyProperty="resumeId">
+    INSERT INTO resume (member_id, address, github_url, portfolio_url, is_primary, updated_at)
+    VALUES (#{memberId}, #{address}, #{githubUrl}, #{portfolioUrl}, #{isPrimary}, CURRENT_DATE)
+  </insert>
+
+  <update id="updateResumeBase" parameterType="com.devready.backend_user.resume.vo.ResumeVO">
+    UPDATE resume
+    SET address = #{address}, github_url = #{githubUrl}, portfolio_url = #{portfolioUrl},
+        updated_at = CURRENT_DATE
+    WHERE resume_id = #{resumeId}
+  </update>
+
+  <delete id="deleteResume">
+    DELETE FROM resume WHERE resume_id = #{resumeId}
+  </delete>
+
+  <!-- ───── member 동기화(name 만) ───── -->
+  <update id="updateMemberName">
+    UPDATE member SET name = #{name} WHERE member_id = #{memberId}
+  </update>
+
+  <!-- ───── career ───── -->
+  <delete id="deleteCareersByResume">
+    DELETE FROM career WHERE resume_id = #{resumeId}
+  </delete>
+
+  <insert id="insertCareer" parameterType="com.devready.backend_user.resume.vo.CareerVO">
+    INSERT INTO career (resume_id, company_name, job_position, start_date, end_date,
+                        employment_type, main_duties)
+    VALUES (#{resumeId}, #{companyName}, #{jobPosition}, #{startDate}, #{endDate},
+            #{employmentType}, #{mainDuties})
+  </insert>
+
+  <!-- ───── skill / resume_skill ───── -->
+  <delete id="deleteResumeSkillsByResume">
+    DELETE FROM resume_skill WHERE resume_id = #{resumeId}
+  </delete>
+
+  <select id="findSkillByName" resultType="java.lang.Long">
+    SELECT skill_id FROM skill WHERE skill_name = #{name} LIMIT 1
+  </select>
+
+  <insert id="insertSkill" parameterType="map" useGeneratedKeys="true"
+          keyProperty="skillId" keyColumn="skill_id">
+    INSERT INTO skill (skill_name, usage_count) VALUES (#{name}, 0)
+  </insert>
+
+  <insert id="insertResumeSkill">
+    INSERT INTO resume_skill (resume_id, skill_id) VALUES (#{resumeId}, #{skillId})
+  </insert>
+
+  <!-- ───── resume_version ───── -->
+  <select id="maxVersionNo" resultType="int">
+    SELECT COALESCE(MAX(version_no), 0) FROM resume_version WHERE resume_id = #{resumeId}
+  </select>
+
+  <insert id="insertVersion" parameterType="com.devready.backend_user.resume.vo.ResumeVersionVO"
+          useGeneratedKeys="true" keyProperty="versionId">
+    INSERT INTO resume_version (resume_id, version_no, label, snapshot)
+    VALUES (#{resumeId}, #{versionNo}, #{label}, #{snapshot})
+  </insert>
+
+  <select id="findVersionsByResume" resultType="com.devready.backend_user.resume.vo.ResumeVersionVO">
+    SELECT version_id, resume_id, version_no, label, snapshot, created_at
+    FROM resume_version
+    WHERE resume_id = #{resumeId}
+    ORDER BY version_no ASC
+  </select>
+
+  <delete id="deleteVersionsByResume">
+    DELETE FROM resume_version WHERE resume_id = #{resumeId}
+  </delete>
+
+  <select id="findVersionCreatedAt" resultType="java.lang.String">
+    SELECT created_at FROM resume_version WHERE version_id = #{versionId}
+  </select>
+
+</mapper>

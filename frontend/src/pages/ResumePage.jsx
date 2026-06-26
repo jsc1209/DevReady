@@ -23,6 +23,12 @@ import {
   WorkspacePremium,
 } from "@mui/icons-material";
 import jsPDF from "jspdf";
+import {
+  getMyResumes,
+  createResume as apiCreateResume,
+  updateResume as apiUpdateResume,
+  deleteResumeById,
+} from "../api/resumeApi";
 
 // 이력서 필수 충족 여부를 게이트 플래그(localStorage)로 동기화
 function setResumeComplete(v) {
@@ -55,33 +61,21 @@ const isRequiredFilled = (r) =>
   ((r.skills?.length ?? 0) > 0 || !!r.skillsNone);
 
 // ─── Initial data ─────────────────────────────────────────
-const INITIAL_RESUME = {
-  id: "r1",
-  name: "학습용 이력서",
-  basic: {
-    name: "김지수",
-    email: "jisu@example.com",
-    phone: "010-1234-5678",
-    address: "서울 강남구",
-    github: "github.com/jisu-kim",
-    portfolio: "",
-  },
-  educations: [{ school: "한국대학교", major: "컴퓨터공학과", grade: "3.8/4.5", period: "2020.03 ~ 2026.02" }],
-  careers: [
-    {
-      company: "(주)스타트업A",
-      role: "프론트엔드 인턴",
-      period: "2025.07 ~ 2025.12",
-      desc: "React 기반 대시보드 개발 및 유지보수",
-      employmentType: "인턴",
-      team: "웹서비스팀",
-      current: false,
-    },
-  ],
-  certifications: [{ name: "정보처리기사", issuer: "한국산업인력공단", date: "2025.08" }],
-  skills: ["React", "TypeScript", "Next.js", "Tailwind CSS", "Node.js"],
-  coverText: "React와 TypeScript를 주력으로 사용하며, 사용자 경험을 최우선으로 생각하는 프론트엔드 개발자입니다.",
-};
+// (기존 INITIAL_RESUME 더미 제거 — 이력서는 이제 DB(/api/resumes)에서 로드한다.)
+
+// 새(빈) 이력서 — 멀티 이력서 탭 추가/미저장 상태용. 저장 전까진 local- 임시 id.
+function emptyResume() {
+  return {
+    id: `local-${Date.now()}`,
+    name: "새 이력서",
+    basic: { name: "", email: "", phone: "", address: "", github: "", portfolio: "" },
+    educations: [],
+    careers: [],
+    certifications: [],
+    skills: [],
+    coverText: "",
+  };
+}
 
 // ─── Mock AI responses ────────────────────────────────────
 const AI_SUGGESTIONS = {
@@ -709,20 +703,67 @@ export default function ResumePage() {
     if (!isAuthed()) navigate("/auth");
   }, [navigate]);
 
-  const [resumes, setResumes] = useState([INITIAL_RESUME]);
-  const [activeId, setActiveId] = useState("r1");
-  const [versions, setVersions] = useState({
-    r1: [
-      { id: "rv1", label: "v1 — 최초 작성", date: "2026.04.12", desc: "최초 작성본", data: { ...INITIAL_RESUME } },
-      {
-        id: "rv2",
-        label: "v2 — 네이버 지원용",
-        date: "2026.05.20",
-        desc: "자소서 보강",
-        data: { ...INITIAL_RESUME, name: "네이버 지원용" },
-      },
-    ],
-  });
+  const [resumes, setResumes] = useState([]);
+  const [activeId, setActiveId] = useState(null);
+  const [versions, setVersions] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // 최초 1회: DB에서 내 이력서 로드(스냅샷 기준). 없으면 빈 로컬 이력서 1개로 시작.
+  useEffect(() => {
+    let alive = true;
+    getMyResumes()
+      .then((list) => {
+        if (!alive) return;
+        if (!list || list.length === 0) {
+          const local = emptyResume();
+          setResumes([local]);
+          setVersions({ [local.id]: [] });
+          setActiveId(local.id);
+        } else {
+          const rs = list.map((r) => {
+            const d = r.data || {};
+            return {
+              id: String(r.resumeId),
+              name: r.name ?? d.name ?? "이력서",
+              basic: d.basic ?? { name: "", email: "", phone: "", address: "", github: "", portfolio: "" },
+              educations: d.educations ?? [],
+              careers: d.careers ?? [],
+              certifications: d.certifications ?? [],
+              skills: d.skills ?? [],
+              coverText: d.coverText ?? "",
+              careerNone: d.careerNone ?? false,
+              skillsNone: d.skillsNone ?? false,
+            };
+          });
+          const vmap = {};
+          list.forEach((r) => {
+            vmap[String(r.resumeId)] = (r.versions || []).map((v) => ({
+              id: String(v.versionId),
+              label: v.label,
+              date: v.createdAt,
+              desc: "저장본",
+              data: v.data,
+            }));
+          });
+          setResumes(rs);
+          setVersions(vmap);
+          setActiveId(rs[0].id);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!alive) return;
+        const local = emptyResume();
+        setResumes([local]);
+        setVersions({ [local.id]: [] });
+        setActiveId(local.id);
+        setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [activeSection, setActiveSection] = useState("basic");
   const [showHistory, setShowHistory] = useState(false);
   const [aiPanel, setAiPanel] = useState(null);
@@ -736,9 +777,9 @@ export default function ResumePage() {
 
   const resume = resumes.find((r) => r.id === activeId);
 
-  // 게이트 플래그를 '실제 필수 충족 여부'로 동기화 (저장과 무관, 데이터 기준)
+  // 게이트 플래그(devready_resume_complete)를 필수충족 여부로 동기화(1안: 게이트 4곳 무수정·호환).
   useEffect(() => {
-    setResumeComplete(isRequiredFilled(resume));
+    if (resume) setResumeComplete(isRequiredFilled(resume));
   }, [resume]);
 
   const updateResume = (patch) => {
@@ -748,7 +789,9 @@ export default function ResumePage() {
     setResumes((arr) => arr.map((r) => (r.id === activeId ? { ...r, basic: { ...r.basic, [key]: val } } : r)));
   };
 
-  const saveVersion = () => {
+  // 저장 = DB 영속화. 미저장(local-) 이면 생성(POST), 아니면 수정(PUT). 둘 다 새 버전 1개 추가.
+  const saveVersion = async () => {
+    if (saving) return;
     if (!isRequiredFilled(resume)) {
       setSavedMsg(false);
       setSaveError("필수 항목(기본정보·경력·스킬)을 작성해야 저장할 수 있습니다.");
@@ -756,51 +799,68 @@ export default function ResumePage() {
       return;
     }
     setSaveError("");
-    const now = new Date();
-    const label = `v${(versions[activeId]?.length ?? 0) + 1} — ${resume.name}`;
-    const ver = {
-      id: `rv${Date.now()}`,
-      label,
-      date: now
-        .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
-        .replace(/\. /g, "."),
-      desc: "수동 저장",
-      data: {
-        ...resume,
-        educations: [...resume.educations],
-        careers: [...resume.careers],
-        certifications: [...resume.certifications],
-        skills: [...resume.skills],
-      },
-    };
-    setVersions((v) => ({ ...v, [activeId]: [...(v[activeId] ?? []), ver] }));
-    setSavedMsg(true);
-    setTimeout(() => setSavedMsg(false), 2000);
+    setSaving(true);
+    try {
+      const isLocal = String(resume.id).startsWith("local-");
+      const r = isLocal ? await apiCreateResume(resume) : await apiUpdateResume(resume.id, resume);
+      const realId = String(r.resumeId);
+      const newVer = {
+        id: String(r.versionId),
+        label: r.label,
+        date: r.createdAt,
+        desc: "저장본",
+        data: { ...resume, id: realId },
+      };
+      if (isLocal) {
+        const oldId = resume.id;
+        setResumes((arr) => arr.map((x) => (x.id === oldId ? { ...x, id: realId } : x)));
+        setActiveId(realId);
+        setVersions((v) => {
+          const nv = { ...v };
+          const prev = nv[oldId] ?? [];
+          delete nv[oldId];
+          nv[realId] = [...prev, newVer];
+          return nv;
+        });
+      } else {
+        setVersions((v) => ({ ...v, [realId]: [...(v[realId] ?? []), newVer] }));
+      }
+      setSavedMsg(true);
+      setTimeout(() => setSavedMsg(false), 2000);
+    } catch {
+      setSaveError("저장에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+      setTimeout(() => setSaveError(""), 3000);
+    } finally {
+      setSaving(false);
+    }
   };
 
+  // 새 탭은 로컬 임시 이력서로 추가(저장 시 POST 로 영속화).
   const createResume = () => {
-    const id = `r${Date.now()}`;
-    const nr = {
-      id,
-      name: "새 이력서",
-      basic: { name: "", email: "", phone: "", address: "", github: "", portfolio: "" },
-      educations: [],
-      careers: [],
-      certifications: [],
-      skills: [],
-      coverText: "",
-    };
+    const nr = emptyResume();
     setResumes((r) => [...r, nr]);
-    setVersions((v) => ({ ...v, [id]: [] }));
-    setActiveId(id);
+    setVersions((v) => ({ ...v, [nr.id]: [] }));
+    setActiveId(nr.id);
     setActiveSection("basic");
     setShowHistory(false);
   };
 
-  const deleteResume = (id) => {
+  const deleteResume = async (id) => {
     if (resumes.length === 1) return;
+    if (!String(id).startsWith("local-")) {
+      try {
+        await deleteResumeById(id);
+      } catch {
+        /* 삭제 실패해도 로컬에서 제거(다음 로드 시 재동기화) */
+      }
+    }
     const next = resumes.find((r) => r.id !== id);
     setResumes((r) => r.filter((x) => x.id !== id));
+    setVersions((v) => {
+      const nv = { ...v };
+      delete nv[id];
+      return nv;
+    });
     if (activeId === id && next) setActiveId(next.id);
     setDeleteConfirm(null);
   };
@@ -884,6 +944,15 @@ export default function ResumePage() {
       *
     </Box>
   );
+
+  // 로드 전(또는 활성 이력서 없음) → 로딩 표시. 이후 코드는 resume 존재를 가정.
+  if (loading || !resume) {
+    return (
+      <Box sx={{ maxWidth: 1024, mx: "auto", px: 2, py: 10, textAlign: "center" }}>
+        <Typography sx={{ color: "text.secondary" }}>이력서를 불러오는 중…</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ maxWidth: 1024, mx: "auto", px: 2, py: 5 }}>

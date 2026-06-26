@@ -14,3 +14,29 @@ export const analyzeResume = async ({ document, jobPosting = '', role = '', lang
   })
   return res.data
 }
+
+// ── 이력서 영속화(/api/resumes) — 로그인 토큰(gatewayAxios 인터셉터) 기준, 본인 것만 ──
+// DataVO 응답({success,message,data}) 에서 data 만 반환.
+
+// 내 이력서 목록: [{ resumeId, name, isPrimary, data(최신 스냅샷), versions:[{versionId,versionNo,label,createdAt,data}] }]
+export const getMyResumes = async () => {
+  const res = await gatewayAxios.get('/api/resumes')
+  return res?.data?.data ?? []
+}
+
+// 새 이력서 첫 저장 → { resumeId, versionId, versionNo, label, createdAt }
+export const createResume = async (resume) => {
+  const res = await gatewayAxios.post('/api/resumes', resume)
+  return res?.data?.data
+}
+
+// 기존 이력서 저장/수정(+버전 추가) → { resumeId, versionId, versionNo, label, createdAt }
+export const updateResume = async (id, resume) => {
+  const res = await gatewayAxios.put(`/api/resumes/${id}`, resume)
+  return res?.data?.data
+}
+
+// 이력서 삭제
+export const deleteResumeById = async (id) => {
+  await gatewayAxios.delete(`/api/resumes/${id}`)
+}
