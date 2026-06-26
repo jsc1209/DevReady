@@ -1,6 +1,7 @@
 import { Routes, Route, Link, Navigate } from 'react-router-dom'
 import { Box, Typography, Button, Stack } from '@mui/material'
 import ResumeAnalyzePage from './pages/ResumeAnalyzePage'
+import ResumePage from "./pages/ResumePage";
 import SignupPage from "./pages/SignupPage";
 import AuthPage from "./pages/AuthPage";
 import MyPage from "./pages/MyPage";
@@ -30,7 +31,7 @@ const Home = () => (
       AI 서버 연동 데모 — 기능을 하나씩 추가하는 중
     </Typography>
     <Stack direction="row" spacing={2}>
-      <Button component={Link} to="/resume" variant="contained">이력서 분석</Button>
+      <Button component={Link} to="/resume/analyze" variant="contained">이력서 분석</Button>
     </Stack>
   </Box>
 )
@@ -40,7 +41,8 @@ const App = () => (
     <Route element={<Layout />}>
       <Route path="/" element={<LandingPage />} />
       <Route path="/demo" element={<Home />} />
-      <Route path="/resume" element={<ResumeAnalyzePage />} />
+      <Route path="/resume" element={<ResumePage />} />
+      <Route path="/resume/analyze" element={<ResumeAnalyzePage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/login" element={<Navigate to="/auth" replace />} />
       <Route path="/auth" element={<AuthPage />} />
