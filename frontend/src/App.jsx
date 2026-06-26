@@ -23,6 +23,7 @@ import InterviewSession from "./pages/InterviewSession";
 import SessionDetail from "./pages/SessionDetail";
 import AdminPage from "./pages/AdminPage";
 import Layout from "./components/layout/Layout";
+import RequireResume from "./components/RequireResume";
 
 const Home = () => (
   <Box sx={{ p: 4 }}>
@@ -49,21 +50,25 @@ const App = () => (
       <Route path="/me" element={<MyPage />} />
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/history/:id" element={<SessionDetail />} />
-      <Route path="/interview" element={<InterviewLanding />} />
-      <Route path="/interview/setup" element={<InterviewSetup />} />
-      <Route path="/interview/payment" element={<InterviewPayment />} />
-      <Route path="/interview/report/:id" element={<InterviewReport />} />
-      <Route path="/jobs" element={<JobsPage />} />
-      <Route path="/jobs/:id" element={<JobDetailPage />} />
-      <Route path="/education" element={<EducationPage />} />
-      <Route path="/education/coding-test" element={<CodingTestPage />} />
-      <Route path="/education/course/:id" element={<CourseDetailPage />} />
+      {/* 모의면접 — 진입 자체를 이력서 게이트로 차단(메뉴 클릭·URL 직접입력 모두) */}
+      <Route path="/interview" element={<RequireResume><InterviewLanding /></RequireResume>} />
+      <Route path="/interview/setup" element={<RequireResume><InterviewSetup /></RequireResume>} />
+      <Route path="/interview/payment" element={<RequireResume><InterviewPayment /></RequireResume>} />
+      <Route path="/interview/report/:id" element={<RequireResume><InterviewReport /></RequireResume>} />
+      {/* 공고 — 진입 게이트 */}
+      <Route path="/jobs" element={<RequireResume><JobsPage /></RequireResume>} />
+      <Route path="/jobs/:id" element={<RequireResume><JobDetailPage /></RequireResume>} />
+      {/* 교육 — 진입 게이트 */}
+      <Route path="/education" element={<RequireResume><EducationPage /></RequireResume>} />
+      <Route path="/education/coding-test" element={<RequireResume><CodingTestPage /></RequireResume>} />
+      <Route path="/education/course/:id" element={<RequireResume><CourseDetailPage /></RequireResume>} />
       <Route path="/community" element={<CommunityPage />} />
       <Route path="/calendar" element={<CalendarPage />} />
       <Route path="/mypage" element={<MyPageFull />} />
     </Route>
     {/* 면접 진행은 헤더/띠 없는 풀스크린 몰입형 (원본 Root: /interview/session 는 Layout 제외) */}
-    <Route path="/interview/session" element={<InterviewSession />} />
+    {/* Layout 밖이지만 동일하게 진입 게이트 적용(URL 직접입력 차단) */}
+    <Route path="/interview/session" element={<RequireResume><InterviewSession /></RequireResume>} />
     {/* 관리자 페이지도 자체 사이드바 풀스크린 (원본 Root: /admin 는 Layout 제외) */}
     <Route path="/admin" element={<AdminPage />} />
   </Routes>
