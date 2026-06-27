@@ -152,7 +152,13 @@ export async function getSession(id) {
         depth: n(m.depth),
         communication: n(m.communication),
       },
-      star: { S: 0, T: 0, A: 0, R: 0 },
+      // 백엔드 findQuestionsWithAnswers 의 명시 alias(situationScore/taskScore/actionScore/resultScore)
+      star: {
+        S: Number(m.situationScore) || 0,
+        T: Number(m.taskScore) || 0,
+        A: Number(m.actionScore) || 0,
+        R: Number(m.resultScore) || 0,
+      },
       wpm: 0,
       silenceCount: 0,
       followupQ: f?.questionText ?? "",

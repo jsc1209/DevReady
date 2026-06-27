@@ -38,10 +38,12 @@
   <insert id="insertAnswerScore" parameterType="map">
     INSERT INTO answer_score
       (answer_id, technical_accuracy_score, logical_structure_score, specificity_score,
-       depth_understanding_score, communication_score, total_score, item_feedback)
+       depth_understanding_score, communication_score, total_score, item_feedback,
+       situation_score, task_score, action_score, result_score)
     VALUES
       (#{answerId}, #{technical}, #{logic}, #{specificity},
-       #{depth}, #{communication}, #{total}, #{feedback})
+       #{depth}, #{communication}, #{total}, #{feedback},
+       #{situation}, #{task}, #{action}, #{result})
   </insert>
 
   <insert id="insertReport" parameterType="map">
@@ -107,6 +109,10 @@
            sc.specificity_score         AS specificity,
            sc.depth_understanding_score AS depth,
            sc.communication_score       AS communication,
+           sc.situation_score           AS situationScore,
+           sc.task_score                AS taskScore,
+           sc.action_score              AS actionScore,
+           sc.result_score              AS resultScore,
            sc.total_score               AS total,
            sc.item_feedback             AS feedback
     FROM question q

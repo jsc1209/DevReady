@@ -79,6 +79,12 @@ public class InterviewStoreService {
             asc.put("communication", c);
             asc.put("total", total);
             asc.put("feedback", orEmpty(str(e.get("feedback"))));
+            // STAR(답변 단위 숫자 0~100). 없으면(mock/딥링크) 0 — num() 이 null 안전 처리.
+            Map<String, Object> st = asMap(e.get("star"));
+            asc.put("situation", num(st == null ? null : st.get("S")));
+            asc.put("task", num(st == null ? null : st.get("T")));
+            asc.put("action", num(st == null ? null : st.get("A")));
+            asc.put("result", num(st == null ? null : st.get("R")));
             interviewMapper.insertAnswerScore(asc);
             totalSum += total;
             scored++;

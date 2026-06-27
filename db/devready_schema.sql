@@ -338,6 +338,10 @@ CREATE TABLE `answer_score` (
   `communication_score` DECIMAL(5,2) NOT NULL DEFAULT 0 COMMENT '커뮤니케이션 점수',
   `total_score` DECIMAL(5,2) NOT NULL DEFAULT 0 COMMENT '합산 점수',
   `item_feedback` TEXT NOT NULL COMMENT '항목별 피드백',
+  `situation_score` DECIMAL(5,2) NOT NULL DEFAULT 0 COMMENT 'STAR-상황 점수',
+  `task_score` DECIMAL(5,2) NOT NULL DEFAULT 0 COMMENT 'STAR-과제 점수',
+  `action_score` DECIMAL(5,2) NOT NULL DEFAULT 0 COMMENT 'STAR-행동 점수',
+  `result_score` DECIMAL(5,2) NOT NULL DEFAULT 0 COMMENT 'STAR-결과 점수',
   PRIMARY KEY (`answer_id`),
   CONSTRAINT `fk_answer_score_answer_id` FOREIGN KEY (`answer_id`) REFERENCES `answer` (`answer_id`),
   CONSTRAINT `ck_answer_score_1` CHECK (`technical_accuracy_score` BETWEEN 0 AND 100),
@@ -345,7 +349,11 @@ CREATE TABLE `answer_score` (
   CONSTRAINT `ck_answer_score_3` CHECK (`specificity_score` BETWEEN 0 AND 100),
   CONSTRAINT `ck_answer_score_4` CHECK (`depth_understanding_score` BETWEEN 0 AND 100),
   CONSTRAINT `ck_answer_score_5` CHECK (`communication_score` BETWEEN 0 AND 100),
-  CONSTRAINT `ck_answer_score_6` CHECK (`total_score` BETWEEN 0 AND 100)
+  CONSTRAINT `ck_answer_score_6` CHECK (`total_score` BETWEEN 0 AND 100),
+  CONSTRAINT `ck_answer_score_7` CHECK (`situation_score` BETWEEN 0 AND 100),
+  CONSTRAINT `ck_answer_score_8` CHECK (`task_score` BETWEEN 0 AND 100),
+  CONSTRAINT `ck_answer_score_9` CHECK (`action_score` BETWEEN 0 AND 100),
+  CONSTRAINT `ck_answer_score_10` CHECK (`result_score` BETWEEN 0 AND 100)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='5항목 채점';
 
 DROP TABLE IF EXISTS `interview_consent`;

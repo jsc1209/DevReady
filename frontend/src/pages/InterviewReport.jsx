@@ -227,6 +227,7 @@ export default function InterviewReport({ data } = {}) {
             question: e.question ?? e.main ?? "",
             answer: e.answer ?? "",
             scores: e.scores,
+            star: e.star ?? { S: 0, T: 0, A: 0, R: 0 },
             feedback: e.aiFeedback?.feedback ?? "",
             followupQ: e.followupQ ?? e.followup ?? "",
             followupA: e.followupA ?? e.followupAnswer ?? "",
