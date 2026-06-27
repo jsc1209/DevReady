@@ -961,9 +961,9 @@ export default function ResumePage() {
         <Box
           sx={{
             position: "fixed",
-            top: 24,
+            top: 96,
             right: 24,
-            zIndex: 100,
+            zIndex: (theme) => theme.zIndex.snackbar,
             bgcolor: "#fff",
             border: "1px solid #FECACA",
             borderRadius: "12px",
@@ -985,9 +985,9 @@ export default function ResumePage() {
         <Box
           sx={{
             position: "fixed",
-            top: 24,
+            top: 96,
             right: 24,
-            zIndex: 100,
+            zIndex: (theme) => theme.zIndex.snackbar,
             bgcolor: "#fff",
             border: "1px solid #BBF7D0",
             borderRadius: "12px",
