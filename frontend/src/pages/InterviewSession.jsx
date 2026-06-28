@@ -18,7 +18,7 @@ import {
   MonitorHeart,
 } from "@mui/icons-material";
 import { Q_BANK, PERSONALITY_QUESTIONS } from "../data/interviewSessionMock";
-import { evaluateAnswer, mapScores, generateQuestions } from "../api/interviewApi";
+import { evaluateAnswer, mapScores, mapStar, generateQuestions } from "../api/interviewApi";
 
 // Mock followup generation based on answer
 function generateFollowup(question, answer) {
@@ -39,15 +39,7 @@ function generateFollowup(question, answer) {
   return followups[Math.floor(Math.random() * followups.length)];
 }
 
-// STAR analysis mock
-function analyzeSTAR(answer) {
-  const sitKeywords = ["상황", "당시", "그때", "환경", "배경", "context"];
-  const taskKeywords = ["목표", "과제", "요구", "필요", "문제", "task"];
-  const actionKeywords = ["했습니다", "구현", "진행", "적용", "방법", "방식", "접근"];
-  const resultKeywords = ["결과", "성과", "개선", "향상", "달성", "완료", "효과"];
-  const score = (kws) => Math.min(100, kws.filter((k) => answer.includes(k)).length * 30 + (answer.length > 100 ? 30 : 0));
-  return { S: score(sitKeywords), T: score(taskKeywords), A: score(actionKeywords), R: score(resultKeywords) };
-}
+// STAR 는 AI evaluate 응답(star/star_grade/star_overall)을 그대로 사용 — 로컬 mock(analyzeSTAR) 제거됨.
 
 // 5-category scoring mock (question 인자는 시그니처 호환용 — 본문 미사용)
 function scoreAnswer(answer, _question) {
@@ -388,10 +380,18 @@ export default function InterviewSession() {
       setScoring(true);
       let scores;
       let aiFeedback = null;
+      // STAR 는 AI evaluate 응답 값만 사용(mock 폴백 없음) — AI star 없으면 0/N/A 유지.
+      let starData = {
+        star: { S: 0, T: 0, A: 0, R: 0 },
+        starGrade: { S: "N/A", T: "N/A", A: "N/A", R: "N/A" },
+        starOverall: 0,
+        starOverallGrade: "N/A",
+      };
       try {
         const res = await evaluateAnswer({ question: entries[idx].main, answer: answerText, lang: "ko" });
         if (res?.success && res.data?.scores) {
           scores = mapScores(res.data); // 4축 → 5키
+          starData = mapStar(res.data); // STAR 점수+등급+종합 (AI 값)
           aiFeedback = {
             feedback: res.data.feedback ?? "",
             strengths: res.data.strengths ?? [],
@@ -401,17 +401,27 @@ export default function InterviewSession() {
           throw new Error(res?.message || "AI 채점 응답 오류");
         }
       } catch {
-        scores = scoreAnswer(answerText, entries[idx].main); // mock 폴백(연동 실패/미가동)
+        scores = scoreAnswer(answerText, entries[idx].main); // 점수만 mock 폴백(STAR 는 0/N/A 유지)
       } finally {
         setScoring(false);
       }
-      const star = analyzeSTAR(answerText); // STAR 는 evaluate 응답에 없음 → mock 유지
 
       // 메인 질문 답변 저장 (aiFeedback 은 있을 때만 옵션 필드로 — Report 는 미사용, 향후 확장용)
       setEntries((prev) =>
         prev.map((e, i) =>
           i === idx
-            ? { ...e, answer: answerText, scores, star, wpm, answerTime: Math.round(elapsed * 60), ...(aiFeedback ? { aiFeedback } : {}) }
+            ? {
+                ...e,
+                answer: answerText,
+                scores,
+                star: starData.star,
+                starGrade: starData.starGrade,
+                starOverall: starData.starOverall,
+                starOverallGrade: starData.starOverallGrade,
+                wpm,
+                answerTime: Math.round(elapsed * 60),
+                ...(aiFeedback ? { aiFeedback } : {}),
+              }
             : e
         )
       );

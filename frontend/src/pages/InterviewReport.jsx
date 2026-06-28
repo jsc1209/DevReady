@@ -30,7 +30,7 @@ import {
   SURVEY_EVERY,
   starGuide,
 } from "../data/interviewReportMock";
-import { generateReport, saveSession } from "../api/interviewApi";
+import { generateReport, saveSession, starGradeOf, starOverallGradeOf } from "../api/interviewApi";
 
 const mono = "'DM Mono', monospace";
 
@@ -94,8 +94,8 @@ function ScoreCircle({ score }) {
   );
 }
 
-// STAR 요소 막대 (얇은 바)
-function StarBar({ label, value, color }) {
+// STAR 요소 막대 (얇은 바) — value(0~100) + 등급
+function StarBar({ label, value, grade, color }) {
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", fontSize: 12, mb: 0.5 }}>
@@ -104,6 +104,7 @@ function StarBar({ label, value, color }) {
         </Typography>
         <Typography component="span" sx={{ fontSize: 12, fontFamily: mono, color }}>
           {value}
+          {grade ? ` · ${grade}` : ""}
         </Typography>
       </Box>
       <Box sx={{ height: 6, borderRadius: "999px", bgcolor: "#F8F9FF" }}>
@@ -309,6 +310,9 @@ export default function InterviewReport({ data } = {}) {
     A: Math.round(entries.reduce((s, e) => s + e.star.A, 0) / entries.length),
     R: Math.round(entries.reduce((s, e) => s + e.star.R, 0) / entries.length),
   };
+  // 섹션 종합 STAR(면접 전체 평균) — 등급은 avgStar 4개 평균에서 재계산(AI per-answer 종합이 아님).
+  const avgStarOverall = Math.round((avgStar.S + avgStar.T + avgStar.A + avgStar.R) / 4);
+  const avgStarOverallGrade = starOverallGradeOf(avgStarOverall);
 
   const weakStarElement = Object.entries(avgStar).sort((a, b) => a[1] - b[1])[0];
 
@@ -900,9 +904,29 @@ export default function InterviewReport({ data } = {}) {
           mb: 4,
         }}
       >
-        <Typography sx={{ fontWeight: 600, color: "text.primary", mb: 1 }}>
-          STAR 구조 분석
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 1 }}>
+          <Typography sx={{ fontWeight: 600, color: "text.primary" }}>
+            STAR 구조 분석
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.75,
+              px: 1.25,
+              py: 0.5,
+              borderRadius: "999px",
+              bgcolor: "rgba(108,99,255,0.08)",
+              border: "1px solid rgba(108,99,255,0.2)",
+              flexShrink: 0,
+            }}
+          >
+            <Typography component="span" sx={{ fontSize: 11, color: "text.secondary" }}>STAR 종합</Typography>
+            <Typography component="span" sx={{ fontSize: 13, fontWeight: 700, fontFamily: mono, color: "primary.main" }}>
+              {avgStarOverall} · {avgStarOverallGrade}
+            </Typography>
+          </Box>
+        </Box>
         <Typography sx={{ fontSize: 12, color: "text.secondary", mb: 3 }}>
           답변을 S·T·A·R 4요소로 자동 분류한 결과입니다.
         </Typography>
@@ -914,10 +938,10 @@ export default function InterviewReport({ data } = {}) {
           }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            <StarBar label="S — Situation (상황)" value={avgStar.S} color="#6366F1" />
-            <StarBar label="T — Task (과제)" value={avgStar.T} color="#3B82F6" />
-            <StarBar label="A — Action (행동)" value={avgStar.A} color="#10B981" />
-            <StarBar label="R — Result (결과)" value={avgStar.R} color="#F59E0B" />
+            <StarBar label="S — Situation (상황)" value={avgStar.S} grade={starGradeOf(avgStar.S)} color="#6366F1" />
+            <StarBar label="T — Task (과제)" value={avgStar.T} grade={starGradeOf(avgStar.T)} color="#3B82F6" />
+            <StarBar label="A — Action (행동)" value={avgStar.A} grade={starGradeOf(avgStar.A)} color="#10B981" />
+            <StarBar label="R — Result (결과)" value={avgStar.R} grade={starGradeOf(avgStar.R)} color="#F59E0B" />
           </Box>
           <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
             <Box
@@ -1236,6 +1260,11 @@ export default function InterviewReport({ data } = {}) {
                               >
                                 <Typography sx={{ fontSize: 16, fontWeight: 700, fontFamily: mono, color }}>
                                   {item.star[k]}
+                                  {item.starGrade?.[k] ? (
+                                    <Box component="span" sx={{ fontSize: 11, ml: 0.5, color: "text.secondary" }}>
+                                      {item.starGrade[k]}
+                                    </Box>
+                                  ) : null}
                                 </Typography>
                                 <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
                                   {k} · {label}
@@ -1243,6 +1272,11 @@ export default function InterviewReport({ data } = {}) {
                               </Box>
                             ))}
                           </Box>
+                          {item.starOverall != null && (
+                            <Typography sx={{ fontSize: 12, color: "text.secondary", mt: 1, textAlign: "right" }}>
+                              종합 {item.starOverall} · {item.starOverallGrade ?? "N/A"}
+                            </Typography>
+                          )}
                         </Box>
                       )}
 

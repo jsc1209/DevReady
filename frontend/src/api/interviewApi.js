@@ -32,6 +32,28 @@ export function mapScores(evaluation) {
 }
 
 /**
+ * FastAPI evaluate 응답의 STAR(점수+등급+종합)를 프론트 엔트리용으로 추출.
+ * AI 값만 사용(mock 폴백 없음) — 누락 시 0/"N/A".
+ *   응답: star{S,T,A,R}(0~100), star_grade{S,T,A,R}("A"~"F"/"N/A"),
+ *         star_overall(0~100), star_overall_grade("A+"~"F"/"N/A").
+ */
+export function mapStar(evaluation) {
+  const st = evaluation?.star ?? {};
+  const sg = evaluation?.star_grade ?? {};
+  const num = (v) => {
+    const x = Number(v);
+    return Number.isFinite(x) ? x : 0;
+  };
+  const grd = (v) => (v == null || v === "" ? "N/A" : String(v));
+  return {
+    star: { S: num(st.S), T: num(st.T), A: num(st.A), R: num(st.R) },
+    starGrade: { S: grd(sg.S), T: grd(sg.T), A: grd(sg.A), R: grd(sg.R) },
+    starOverall: num(evaluation?.star_overall),
+    starOverallGrade: grd(evaluation?.star_overall_grade),
+  };
+}
+
+/**
  * POST /api/interview/generate — Spring 게이트웨이가 Colab /interview/generate 를 패스스루.
  * 입력 {resume, job_posting, n, persona, lang}. 응답(원본): { ok:true, questions:[문자열,...] } / { ok:false, error }.
  * (DataVO 미적용 — res.ok / res.questions 로 분기.)
@@ -62,6 +84,35 @@ function gradeOf(score) {
   if (score >= 75) return "B";
   if (score >= 70) return "C+";
   return "C";
+}
+
+// 개별 STAR 등급(A~F). 서버 clamp_star 의 ×20 격자(100→A,80→B,60→C,40→D,20→F,0→N/A)와
+// 일치하도록 구간 역산(>=90 A / >=70 B / >=50 C / >=30 D / >0 F / 0·무효 N/A). 라이브/저장본 공용.
+export function starGradeOf(score) {
+  const v = Number(score);
+  if (!Number.isFinite(v) || v <= 0) return "N/A";
+  if (v >= 90) return "A";
+  if (v >= 70) return "B";
+  if (v >= 50) return "C";
+  if (v >= 30) return "D";
+  return "F";
+}
+
+// 종합 STAR 등급(A+~F). 서버 _star_overall_grade 와 동일 구간(0·무효는 N/A).
+export function starOverallGradeOf(score) {
+  const v = Number(score);
+  if (!Number.isFinite(v) || v <= 0) return "N/A";
+  if (v >= 90) return "A+";
+  if (v >= 83) return "A";
+  if (v >= 80) return "A-";
+  if (v >= 73) return "B+";
+  if (v >= 67) return "B";
+  if (v >= 60) return "B-";
+  if (v >= 53) return "C+";
+  if (v >= 47) return "C";
+  if (v >= 40) return "C-";
+  if (v >= 20) return "D";
+  return "F";
 }
 function fmtDate(s) {
   if (!s) return "-";
@@ -142,6 +193,14 @@ export async function getSession(id) {
   });
   const entries = mains.map((m) => {
     const f = byParent[String(m.questionId)];
+    // 저장본 STAR: DB 점수(situationScore 등)만 있음 → 등급은 클라이언트 재계산(라이브와 동일 스킴).
+    const star = {
+      S: Number(m.situationScore) || 0,
+      T: Number(m.taskScore) || 0,
+      A: Number(m.actionScore) || 0,
+      R: Number(m.resultScore) || 0,
+    };
+    const starOverall = Math.round((star.S + star.T + star.A + star.R) / 4);
     return {
       question: m.questionText ?? "",
       answer: m.answerText ?? "",
@@ -152,13 +211,15 @@ export async function getSession(id) {
         depth: n(m.depth),
         communication: n(m.communication),
       },
-      // 백엔드 findQuestionsWithAnswers 의 명시 alias(situationScore/taskScore/actionScore/resultScore)
-      star: {
-        S: Number(m.situationScore) || 0,
-        T: Number(m.taskScore) || 0,
-        A: Number(m.actionScore) || 0,
-        R: Number(m.resultScore) || 0,
+      star,
+      starGrade: {
+        S: starGradeOf(star.S),
+        T: starGradeOf(star.T),
+        A: starGradeOf(star.A),
+        R: starGradeOf(star.R),
       },
+      starOverall,
+      starOverallGrade: starOverallGradeOf(starOverall),
       wpm: 0,
       silenceCount: 0,
       followupQ: f?.questionText ?? "",

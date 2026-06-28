@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devready.backend_user.chat.mapper.ChatMapper">
+
+  <!-- 30분 등 N분 이내 최근 대화 1개(없으면 null) -->
+  <select id="findLatestActiveConversationId" resultType="java.lang.Long">
+    SELECT conversation_id
+    FROM chat_conversation
+    WHERE member_id = #{memberId}
+      AND last_active_at &gt;= DATE_SUB(NOW(), INTERVAL #{withinMinutes} MINUTE)
+    ORDER BY last_active_at DESC
+    LIMIT 1
+  </select>
+
+  <!-- 신규 대화: started_at/last_active_at = NOW(), PK 회수 -->
+  <insert id="insertConversation"
+          parameterType="com.devready.backend_user.chat.dto.ChatConversation"
+          useGeneratedKeys="true" keyProperty="conversationId" keyColumn="conversation_id">
+    INSERT INTO chat_conversation (member_id, title, started_at, last_active_at)
+    VALUES (#{memberId}, #{title}, NOW(), NOW())
+  </insert>
+
+  <!-- 메시지: created_at 은 DB DEFAULT -->
+  <insert id="insertMessage"
+          parameterType="com.devready.backend_user.chat.dto.ChatMessage"
+          useGeneratedKeys="true" keyProperty="messageId" keyColumn="message_id">
+    INSERT INTO chat_message (conversation_id, sender, message_content, faq_id, answer_type)
+    VALUES (#{conversationId}, #{sender}, #{messageContent}, #{faqId}, #{answerType})
+  </insert>
+
+  <update id="touchLastActive">
+    UPDATE chat_conversation SET last_active_at = NOW() WHERE conversation_id = #{conversationId}
+  </update>
+
+</mapper>
